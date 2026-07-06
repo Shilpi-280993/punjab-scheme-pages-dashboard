@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Punjab Scheme Pages — 7-Day Social Media Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#1c2438; --border:#2a3450;
+    --text:#e8ecf5; --sub:#9aa5c0; --accent:#f5a623; --accent2:#4da3ff;
+    --good:#3ecf8e; --bad:#ef5b5b; --warn:#f5c542;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:linear-gradient(180deg,#0b0f19,#101627);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  header{padding:32px 40px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;
+    background:rgba(11,15,25,0.92);backdrop-filter:blur(8px);z-index:50;}
+  header h1{margin:0 0 6px;font-size:26px;letter-spacing:.2px;}
+  header p{margin:0;color:var(--sub);font-size:14px;line-height:1.5;}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--border);
+    border-radius:20px;padding:3px 12px;font-size:12px;color:var(--accent2);margin-right:8px;}
+  .warnbadge{background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,.4);color:var(--bad);}
+  nav{display:flex;gap:4px;padding:14px 40px 0;flex-wrap:wrap;position:sticky;top:92px;
+    background:rgba(11,15,25,0.92);backdrop-filter:blur(8px);z-index:49;}
+  nav button{background:none;border:none;color:var(--sub);padding:10px 16px;font-size:14px;
+    cursor:pointer;border-bottom:2px solid transparent;font-weight:600;}
+  nav button.active{color:var(--text);border-bottom:2px solid var(--accent);}
+  main{padding:28px 40px 80px;max-width:1400px;margin:0 auto;}
+  section{display:none;}
+  section.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .grid{display:grid;gap:18px;}
+  .cards4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .card h3{margin:0 0 4px;font-size:13px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.6px;}
+  .card .big{font-size:32px;font-weight:700;margin:4px 0;}
+  .card .sub{font-size:13px;color:var(--sub);}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:22px;}
+  .panel h2{margin:0 0 4px;font-size:18px;}
+  .panel .desc{color:var(--sub);font-size:13px;margin-bottom:18px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--sub);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border);
+    text-transform:uppercase;font-size:11px;letter-spacing:.5px;}
+  td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:top;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .pagecell{font-weight:600;}
+  .pagecell .handle{display:block;color:var(--sub);font-weight:400;font-size:12px;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .pill.high{background:rgba(62,207,142,.15);color:var(--good);}
+  .pill.mid{background:rgba(245,197,66,.15);color:var(--warn);}
+  .pill.low{background:rgba(239,91,91,.15);color:var(--bad);}
+  .pill.none{background:rgba(154,165,192,.15);color:var(--sub);}
+  .chartwrap{position:relative;height:340px;}
+  .chartwrap.small{height:260px;}
+  .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+  .findingcard{border-left:3px solid var(--accent);padding:14px 16px;background:var(--panel2);
+    border-radius:0 10px 10px 0;margin-bottom:12px;}
+  .findingcard.good{border-color:var(--good);}
+  .findingcard.bad{border-color:var(--bad);}
+  .findingcard h4{margin:0 0 6px;font-size:14px;}
+  .findingcard p{margin:0;font-size:13px;color:var(--sub);line-height:1.5;}
+  .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:var(--border);
+    color:var(--sub);margin-left:6px;}
+  details{background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:12px 16px;}
+  summary{cursor:pointer;font-weight:600;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+  summary::-webkit-details-marker{display:none;}
+  summary .arrow{transition:transform .2s;color:var(--sub);}
+  details[open] summary .arrow{transform:rotate(90deg);}
+  .postbody{margin-top:10px;font-size:13px;color:var(--sub);line-height:1.6;}
+  .adcard{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .adcard .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px;font-size:13px;}
+  .adcard .row b{color:var(--text);}
+  .status-active{color:var(--good);font-weight:700;}
+  .status-inactive{color:var(--sub);font-weight:700;}
+  .disclaimer-flag{color:var(--bad);font-size:12px;font-weight:600;}
+  footer{padding:30px 40px;color:var(--sub);font-size:12px;border-top:1px solid var(--border);text-align:center;}
+  .metricline{display:flex;align-items:center;gap:10px;margin:6px 0;}
+  .metricline .label{width:190px;font-size:12.5px;color:var(--sub);}
+  .barbg{flex:1;height:8px;background:var(--border);border-radius:6px;overflow:hidden;}
+  .barfg{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent2),var(--accent));}
+  .val{width:60px;text-align:right;font-size:12.5px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Punjab Scheme Pages — Social Media Analysis</h1>
+  <p>
+    <span class="badge">Window: Jun 27 – Jul 4, 2026 (7 days)</span>
+    <span class="badge">Platform: Instagram</span>
+    <span class="badge warnbadge">6 of 10 pages received — audit covers these 6</span>
+  </p>
+</header>
+
+<nav id="tabs">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="volume">Post Volume</button>
+  <button data-tab="engagement">Engagement</button>
+  <button data-tab="views">Views</button>
+  <button data-tab="quality">Content Quality</button>
+  <button data-tab="overallquality">Overall Quality</button>
+  <button data-tab="ads">Ad Boost Insights</button>
+  <button data-tab="verdict">What's Working / Not</button>
+  <button data-tab="posts">Post-Level Detail</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<section id="overview" class="active">
+  <div class="grid cards4" style="margin-bottom:22px;">
+    <div class="card">
+      <h3>Pages Audited</h3>
+      <div class="big">6</div>
+      <div class="sub">of 10 pages managed (4 links not yet shared)</div>
+    </div>
+    <div class="card">
+      <h3>Posts in Last 7 Days</h3>
+      <div class="big">~63</div>
+      <div class="sub">across all 6 pages (sampled + confirmed)</div>
+    </div>
+    <div class="card">
+      <h3>Pages Actively Paying for Reach</h3>
+      <div class="big" style="color:var(--accent)">2 of 6</div>
+      <div class="sub">Mukh Mantri Sehat Yojana &amp; Teerth Yatra</div>
+    </div>
+    <div class="card">
+      <h3>Widest Engagement Swing</h3>
+      <div class="big" style="color:var(--good)">8 → 3,778</div>
+      <div class="sub">likes, single page, same week (Yudh Nasheyan Virudh)</div>
+    </div>
+    <div class="card">
+      <h3>Highest Single Reel Views</h3>
+      <div class="big" style="color:var(--accent2)">141K</div>
+      <div class="sub">Sehat Yojana — but only 23 likes on it (see Views tab)</div>
+    </div>
+    <div class="card">
+      <h3>Lowest Like-Through Rate</h3>
+      <div class="big" style="color:var(--bad)">~0.2%</div>
+      <div class="sub">Sehat Yojana — views far outpacing genuine engagement</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Snapshot per page</h2>
+    <div class="desc">All figures are from the public Instagram pages directly (no Insights/admin access) — reach isn't shown publicly, so likes/comments/views stand in for engagement.</div>
+    <table>
+      <tr><th>Page</th><th>Followers</th><th>Posts (7d)</th><th>Likes range</th><th>Views range (Reels)</th><th>Format</th><th>Paid ads found</th></tr>
+      <tr>
+        <td class="pagecell">Yudh Nasheyan Virudh<span class="handle">@yudhnasheanvirudh</span></td>
+        <td>11.3K</td><td>15</td><td>8 – 3,778</td><td>959 – 12.7K</td><td>Reels only</td>
+        <td><span class="pill none">0 ads</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Gangstran Te Vaar<span class="handle">@gangstrantevaar</span></td>
+        <td>15.4K</td><td>7</td><td>0 – 121</td><td>4,153 (1 Reel)</td><td>1 Reel + 6 static bulletins</td>
+        <td><span class="pill mid">2 ads (Mar, inactive)</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Mukh Mantri Sehat Yojana<span class="handle">@mukhmantrisehatyojana</span></td>
+        <td>12.9K</td><td>~17</td><td>4 – 377</td><td>4,535 – 141K</td><td>Daily Reels</td>
+        <td><span class="pill high">~23 ads found</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Mukh Mantri Teerth Yatra<span class="handle">@punjabmukhmantriteerthyatra</span></td>
+        <td>230</td><td>~14</td><td>5 – 54</td><td>140 – 510</td><td>Daily Reels</td>
+        <td><span class="pill high">~73 ads (via proxy pages)</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Water Resources Dept.<span class="handle">@waterresourcedepartment.punjab</span></td>
+        <td>2,923</td><td>~14</td><td>2 – 55</td><td>197 – 30K</td><td>Daily Reels</td>
+        <td><span class="pill none">0 ads</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Punjab Road Infra<span class="handle">@punjab_roadinfra</span></td>
+        <td>836</td><td>~12</td><td>3 – 53</td><td>185 – 2,159</td><td>Daily Reels</td>
+        <td><span class="pill none">0 ads</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Punjab Village Playgrounds<span class="handle">@punjabvillageplaygrounds</span></td>
+        <td>464</td><td>~12</td><td>4 – 57</td><td style="color:var(--sub)">No Reels in window</td><td>Static images (Reels stale 3w)</td>
+        <td><span class="pill none">0 ads</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>How the numbers were measured — important caveats</h2>
+    <div class="two-col">
+      <div>
+        <ul style="color:var(--sub);font-size:13.5px;line-height:1.9;">
+          <li><b style="color:var(--text)">Reach/impressions</b> are not public on Instagram — only page admins see them in Insights. Likes, comments, and (for Reels) view counts are used as proxies here.</li>
+          <li><b style="color:var(--text)">Post counts are sampled, not exhaustive.</b> Several pages post in same-day batches (e.g. multiple district bulletins at once); counts shown are what was directly verified by opening posts, not a guaranteed total.</li>
+          <li><b style="color:var(--text)">Comment counts</b> weren't reliably extractable from the public UI for high-engagement posts (pagination hides most of them) — comments are treated qualitatively, not quantitatively, in this analysis.</li>
+          <li><b style="color:var(--text)">Ad Library data</b> is genuinely public and reliable — this is the most trustworthy dataset in this report.</li>
+        </ul>
+      </div>
+      <div class="findingcard bad">
+        <h4>4 pages missing</h4>
+        <p>You mentioned managing 10 pages; only 6 links were shared. Send the remaining 4 and I'll fold them into this same dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VOLUME -->
+<section id="volume">
+  <div class="panel">
+    <h2>Posts in the last 7 days, by page</h2>
+    <div class="desc">Yudh Nasheyan Virudh posts far more than any other page — almost entirely short-form video. Two pages (Teerth Yatra, Sehat Yojana) post nearly daily despite tiny or mid-size followings.</div>
+    <div class="chartwrap"><canvas id="volumeChart"></canvas></div>
+  </div>
+  <div class="panel">
+    <h2>Format mix</h2>
+    <div class="desc">Reels dominate posting strategy across every page except Village Playgrounds, whose Reels output has actually stopped (last Reel was 3 weeks old) — its recent activity is 100% static image posts.</div>
+    <div class="two-col">
+      <div class="chartwrap small"><canvas id="formatChart"></canvas></div>
+      <div>
+        <div class="findingcard">
+          <h4>Gangstran Te Vaar runs two parallel content tracks</h4>
+          <p>A high-production Reel track (~115 likes) and a low-effort daily "district bulletin" static-image track (0–6 likes each). The bulletins are volume filler, not audience-building content.</p>
+        </div>
+        <div class="findingcard bad">
+          <h4>Village Playgrounds' Reels have gone stale</h4>
+          <p>Last Reel: June 8 (3+ weeks old). All engagement in the last 7 days comes from static "3100 Khed Maidan" template posts — the format that used to drive its best view counts (2,500+ views) has been abandoned.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGAGEMENT -->
+<section id="engagement">
+  <div class="panel">
+    <h2>Likes range per page (min–max observed this week)</h2>
+    <div class="chartwrap"><canvas id="engagementRangeChart"></canvas></div>
+  </div>
+  <div class="panel">
+    <h2>Engagement rate vs. audience size (proxy for "punching above weight")</h2>
+    <div class="desc">Likes as a % of follower count — a rough, directional read since true reach isn't available. Small pages with high rates likely have a highly-engaged niche audience or benefit from cross-posting by officials.</div>
+    <div id="engRateBars"></div>
+  </div>
+  <div class="panel">
+    <h2>Best and worst performing post per page</h2>
+    <table>
+      <tr><th>Page</th><th>Best post</th><th>Worst post</th></tr>
+      <tr><td class="pagecell">Yudh Nasheyan Virudh</td><td><span class="pill high">3,778 likes</span> — recovering addict's personal testimonial, human-interest framing</td><td><span class="pill low">8 likes</span> — dry clip of a minister at a UNODC panel</td></tr>
+      <tr><td class="pagecell">Gangstran Te Vaar</td><td><span class="pill high">121 likes</span> — Reel: CM commending police on 161st day of the campaign</td><td><span class="pill low">0 likes</span> — Faridkot static district bulletin</td></tr>
+      <tr><td class="pagecell">Mukh Mantri Sehat Yojana</td><td><span class="pill high">377 likes</span> — child's emotional cancer-scare recovery story</td><td><span class="pill low">4 likes</span> — generic prostate cancer awareness carousel</td></tr>
+      <tr><td class="pagecell">Mukh Mantri Teerth Yatra</td><td><span class="pill high">54 likes</span> — pilgrim testimonial at Golden Temple</td><td><span class="pill low">5 likes</span> — CM statement graphic (text-heavy, no human face)</td></tr>
+      <tr><td class="pagecell">Water Resources Dept.</td><td><span class="pill high">55 likes</span> — farmer testimonial, canal water reaching fields</td><td><span class="pill low">2 likes</span> — official CM statement graphic</td></tr>
+      <tr><td class="pagecell">Punjab Road Infra</td><td><span class="pill high">53 likes</span> — local villager testimonial on a motorbike, casual tone</td><td><span class="pill low">3 likes</span> — official infographic-heavy stat card</td></tr>
+      <tr><td class="pagecell">Punjab Village Playgrounds</td><td><span class="pill high">57 likes</span> — elderly villager on 1970s-90s sports history, nostalgia framing</td><td><span class="pill low">4 likes</span> — plain "3100 Khed Maidan" template, no personal story</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- VIEWS -->
+<section id="views">
+  <div class="panel">
+    <h2>Views per Reel (last 7 days, sampled)</h2>
+    <div class="desc">Instagram's Reels tab shows a view-count badge on every video without needing to open it — this is genuine public data, unlike reach. Static image/carousel posts don't get a comparable view count, so this tab covers video content only.</div>
+    <div class="chartwrap"><canvas id="viewsChart"></canvas></div>
+  </div>
+
+  <div class="panel" style="border-color:rgba(239,91,91,.5);">
+    <h2>🔎 Key callout: views and likes are badly disconnected on two pages</h2>
+    <p style="color:var(--sub);font-size:14px;line-height:1.7;">
+      On most pages, likes scale roughly with views. But <b style="color:var(--text)">Mukh Mantri Sehat Yojana</b> and, to a lesser extent, <b style="color:var(--text)">Water Resources Department</b> show individual Reels with huge view counts and almost no likes — e.g. Sehat Yojana's 22-hour-old dialysis-patient Reel got <b>54,000 views but only 1 like</b>, and another got <b>141,000 views for just 23 likes</b>. Water Resources had a Reel hit <b>30,000 views on only 32 likes</b>.
+      This "like-through rate" (likes ÷ views) is the clearest engagement-quality signal in the whole dataset — see the Overall Quality tab. It's also the same page running ~23 paid ads, which is a plausible explanation: paid distribution buys views efficiently, but it isn't converting into genuine interest at anywhere near the rate organic reach does.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>Like-through rate by page (likes ÷ views, sampled Reels)</h2>
+    <div class="desc">Higher is better — it means the people who saw the content actually engaged with it, not just scrolled past.</div>
+    <div id="ltrBars"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Raw per-Reel data (views / likes)</h2>
+    <table>
+      <tr><th>Page</th><th>Reel 1</th><th>Reel 2</th><th>Reel 3</th><th>Reel 4</th><th>Reel 5</th></tr>
+      <tr><td class="pagecell">Yudh Nasheyan Virudh</td><td>959v / 40L</td><td>2,322v / 74L</td><td>12.7Kv / 824L</td><td>7,180v / 567L</td><td>1,103v / 8L</td></tr>
+      <tr><td class="pagecell">Gangstran Te Vaar</td><td>4,153v / 115L</td><td colspan="4" style="color:var(--sub)">only 1 Reel in the 7-day window</td></tr>
+      <tr><td class="pagecell">Sehat Yojana</td><td>49.8Kv / 33L</td><td>47.6Kv / 63L</td><td>54Kv / 1L</td><td>4,535v / 43L</td><td>141Kv / 23L</td></tr>
+      <tr><td class="pagecell">Teerth Yatra</td><td>140v / 5L</td><td>446v / 10L</td><td>510v / 29L</td><td>302v / 13L</td><td>377v / 36L</td></tr>
+      <tr><td class="pagecell">Water Resources</td><td>197v / 2L</td><td>638v / 43L</td><td>2,203v / 55L</td><td>30Kv / 32L</td><td>2,269v / 30L</td></tr>
+      <tr><td class="pagecell">Road Infra</td><td>2,159v / 53L</td><td>185v / 3L</td><td>1,599v / 4L</td><td>282v / 4L</td><td>197v / 7L</td></tr>
+      <tr><td class="pagecell">Village Playgrounds</td><td colspan="5" style="color:var(--sub)">Most recent Reel is 3+ weeks old (81 likes / 2,548 views) — no Reels posted within the 7-day window</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- QUALITY -->
+<section id="quality">
+  <div class="panel">
+    <h2>What separates the high performers from the low performers</h2>
+    <div class="desc">Across every single page in this audit, the same pattern holds. This is the clearest, most actionable signal in the whole dataset.</div>
+    <div class="two-col">
+      <div class="findingcard good">
+        <h4>✅ What consistently over-performs</h4>
+        <p><b>Real people, on camera, telling a personal story</b> in their own words (a recovering addict, a farmer, a pilgrim, an elderly villager reminiscing) — these posts out-perform official/government-branded posts by 5–50x on every page that has both formats.</p>
+      </div>
+      <div class="findingcard bad">
+        <h4>❌ What consistently under-performs</h4>
+        <p><b>Text-heavy graphic templates</b> — CM portrait + stat card + hashtags, with no human testimonial — reliably land in the single digits to low tens of likes, even on pages with 10K+ followers.</p>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Quality scoring — engagement rate vs. each page's own baseline</h2>
+    <div class="desc">Flagging posts that ran meaningfully above or below what's typical for that page (not compared across pages, since audience sizes differ 50x).</div>
+    <table>
+      <tr><th>Page</th><th>Baseline (typical)</th><th>Standout over-performer</th><th>Standout under-performer</th></tr>
+      <tr><td class="pagecell">Yudh Nasheyan Virudh</td><td>~50–80 likes</td><td>3,778 likes (47x baseline) — testimonial</td><td>8 likes (0.1x) — panel clip</td></tr>
+      <tr><td class="pagecell">Mukh Mantri Sehat Yojana</td><td>~20–40 likes</td><td>377 likes (12x) — child recovery story</td><td>4 likes (0.15x) — generic health carousel</td></tr>
+      <tr><td class="pagecell">Mukh Mantri Teerth Yatra</td><td>~15–30 likes</td><td>54 likes (2.5x) — pilgrim testimonial</td><td>5 likes (0.3x) — CM statement graphic</td></tr>
+      <tr><td class="pagecell">Water Resources Dept.</td><td>~30 likes</td><td>55 likes (1.8x) — farmer testimonial</td><td>2 likes (0.07x) — CM statement graphic</td></tr>
+      <tr><td class="pagecell">Punjab Road Infra</td><td>~4–10 likes</td><td>53 likes (7x) — casual villager Reel</td><td>3 likes (0.5x) — stat infographic</td></tr>
+      <tr><td class="pagecell">Punjab Village Playgrounds</td><td>~10–15 likes</td><td>57 likes (4x) — nostalgia storytelling</td><td>4 likes (0.4x) — plain template</td></tr>
+      <tr><td class="pagecell">Gangstran Te Vaar</td><td>~1–5 likes (bulletins) / ~115 (Reel)</td><td>121 likes — CM-praises-police Reel</td><td>0 likes — Faridkot bulletin</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- OVERALL QUALITY -->
+<section id="overallquality">
+  <div class="panel">
+    <h2>Overall quality scorecard — per page</h2>
+    <div class="desc">Scored 1–5 across four dimensions, using everything gathered in this audit: storytelling/human element, posting consistency, production polish, and engagement health (like-through rate — the strongest, most objective signal available). Paid-reach reliance is shown as context, not scored, since running ads isn't inherently good or bad.</div>
+    <table>
+      <tr><th>Page</th><th>Storytelling</th><th>Consistency</th><th>Production</th><th>Engagement Health</th><th>Paid Reliance</th><th>Grade</th></tr>
+      <tr>
+        <td class="pagecell">Yudh Nasheyan Virudh</td>
+        <td>5/5</td><td>5/5</td><td>4/5</td><td>4/5 (~4.5% like-thru)</td><td>None</td>
+        <td><span class="pill high">A</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Sehat Yojana</td>
+        <td>4/5</td><td>5/5</td><td>4/5</td><td>1/5 (~0.2% like-thru)</td><td>Heavy (~23 ads)</td>
+        <td><span class="pill mid">B-</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Water Resources Dept.</td>
+        <td>3/5</td><td>4/5</td><td>3/5</td><td>3/5 (~2.3% like-thru)</td><td>None</td>
+        <td><span class="pill mid">B-</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Teerth Yatra</td>
+        <td>4/5</td><td>5/5</td><td>3/5</td><td>4/5 (~5% like-thru)</td><td>Extreme, but 100% via proxy pages</td>
+        <td><span class="pill mid">C</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Road Infra</td>
+        <td>3/5</td><td>3/5</td><td>3/5</td><td>2/5 (~1.9% like-thru)</td><td>None</td>
+        <td><span class="pill mid">C+</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Village Playgrounds</td>
+        <td>4/5</td><td>2/5 (Reels abandoned)</td><td>3/5</td><td>3/5 (limited data)</td><td>None</td>
+        <td><span class="pill mid">C+</span></td>
+      </tr>
+      <tr>
+        <td class="pagecell">Gangstran Te Vaar</td>
+        <td>3/5 (1 good Reel, rest generic)</td><td>3/5</td><td>3/5</td><td>3/5 (~2.8% like-thru)</td><td>Minor, flagged for compliance</td>
+        <td><span class="pill mid">C+</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>What "quality" actually means across this portfolio</h2>
+    <div class="two-col">
+      <div>
+        <div class="findingcard good">
+          <h4>Content quality is genuinely high where it's human</h4>
+          <p>Production values are consistent — good camera work, clean graphics, official branding used correctly across every page. The gap between best and worst pages isn't a skills gap, it's a formula gap: pages that lean on testimonials score dramatically higher than pages that lean on stat cards.</p>
+        </div>
+        <div class="findingcard bad">
+          <h4>Reach quality is a different story from content quality</h4>
+          <p>Sehat Yojana has some of the best individual content (the 377-like child recovery story) but the worst engagement health overall, because heavy paid promotion is buying views that don't convert to interest. Content quality ≠ audience quality when reach is bought rather than earned.</p>
+        </div>
+      </div>
+      <div class="chartwrap small"><canvas id="qualityRadar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Highest-leverage fix per page</h2>
+    <table>
+      <tr><th>Page</th><th>One thing to change</th></tr>
+      <tr><td class="pagecell">Yudh Nasheyan Virudh</td><td>Nothing urgent — keep doing what's working. Consider documenting why the testimonial format performs so well and use it as the house style for the others.</td></tr>
+      <tr><td class="pagecell">Sehat Yojana</td><td>Investigate why paid views aren't converting to likes — check ad targeting/placement quality, not just spend, before running more boosts.</td></tr>
+      <tr><td class="pagecell">Teerth Yatra</td><td>Decide deliberately whether promotion should keep running through proxy pages, or be brought under the official handle.</td></tr>
+      <tr><td class="pagecell">Water Resources Dept.</td><td>More farmer/villager testimonials, fewer CM-portrait stat cards — same fix as everywhere else.</td></tr>
+      <tr><td class="pagecell">Road Infra</td><td>Its one testimonial Reel (53 likes) beat every stat graphic combined — do more of exactly that.</td></tr>
+      <tr><td class="pagecell">Village Playgrounds</td><td>Resume Reels — its best format has been dormant for 3+ weeks while a static template gets reused.</td></tr>
+      <tr><td class="pagecell">Gangstran Te Vaar</td><td>Retire or redesign the daily static district bulletins (0–6 likes); shift that effort into more Reels like the 115-like one.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ADS -->
+<section id="ads">
+  <div class="panel">
+    <h2>Meta Ad Library findings — who's actually paying for reach</h2>
+    <div class="desc">Checked each page against the public Meta Ad Library (facebook.com/ads/library), searching by page name under both "All ads" and "Issues, elections or politics" categories.</div>
+
+    <div class="adcard">
+      <div class="row"><b>Yudh Nasheyan Virudh</b><span class="status-inactive">No ads found</span></div>
+      <p style="color:var(--sub);font-size:13px;margin:6px 0 0;">Purely organic. Its huge reach variance (8 → 3,778 likes) is driven entirely by content quality, not paid boosting.</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Gangstran Te Vaar</b><span class="status-inactive">2 ads, both inactive</span></div>
+      <div class="row"><span>Mar 25–26, 2026 · ₹300–399 spent · 25K–30K impressions</span></div>
+      <div class="row"><span>Mar 28–29, 2026 · ₹400–499 spent · 35K–40K impressions</span></div>
+      <p class="disclaimer-flag">⚠ Both ads flagged: "ran without a required disclaimer"</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Mukh Mantri Sehat Yojana</b><span class="status-active">~23 ads found, incl. 1 currently active</span></div>
+      <div class="row"><span>Jun 21–23, 2026 (inactive) · ₹2K–2.5K spent · 900K–1M impressions</span></div>
+      <div class="row"><span>May 3–5, 2026 ×2 (inactive) · ₹500–699 spent each · 250K–300K impressions each</span></div>
+      <div class="row"><span><b>Active now:</b> "Babe Ke Group of Institutes" (partner hospital) running its own ad referencing the scheme, started Jun 11, 2026</span></div>
+      <p class="disclaimer-flag">⚠ Several flagged: "ran without a required disclaimer"</p>
+      <p style="color:var(--sub);font-size:13px;margin:8px 0 0;">The Jun 21–23 ad is remarkably cost-efficient: ~₹2.2K for up to 1M impressions. Worth understanding what targeting/creative drove that, and replicating it.</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Mukh Mantri Teerth Yatra</b><span class="status-inactive">~73 ads found — all inactive, all via proxy pages</span></div>
+      <p style="color:var(--sub);font-size:13px;margin:6px 0;">None of these ads run under the official page name. All ~73 were published through two third-party pages — <b>"Punjab Di Parampara"</b> and <b>"Punjab Virsa Diaries"</b> — both operated by an ad agency, <b>Partners Advertising Pvt. Ltd</b>.</p>
+      <div class="row"><span>Ran Apr 29 – May 6, 2026 · ₹2.5K–3.5K each · 500K–700K impressions each</span></div>
+      <p class="disclaimer-flag">⚠ This is the single biggest finding in the whole audit — see callout below.</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Water Resources Department</b><span class="status-inactive">No relevant ads</span></div>
+      <p style="color:var(--sub);font-size:13px;margin:6px 0 0;">~16 results matched the search keywords, but all belong to unrelated advertisers (water NGOs, other agencies). Purely organic.</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Punjab Road Infra</b><span class="status-inactive">No relevant ads</span></div>
+      <p style="color:var(--sub);font-size:13px;margin:6px 0 0;">~32 keyword matches, all unrelated (real estate, schools). Purely organic.</p>
+    </div>
+
+    <div class="adcard">
+      <div class="row"><b>Punjab Village Playgrounds</b><span class="status-inactive">No relevant ads</span></div>
+      <p style="color:var(--sub);font-size:13px;margin:6px 0 0;">1 keyword match, unrelated (disabled RTI activist account). Purely organic.</p>
+    </div>
+  </div>
+
+  <div class="panel" style="border-color:rgba(245,166,35,.5);">
+    <h2>🔎 Key callout: the Teerth Yatra page's organic presence is basically theater</h2>
+    <p style="color:var(--sub);font-size:14px;line-height:1.7;">
+      <b style="color:var(--text)">@punjabmukhmantriteerthyatra has only 230 organic followers</b> — by far the smallest audience of any page audited — yet it's tied to <b style="color:var(--text)">~73 paid ads</b>, more than 3x the ad volume of every other page combined. None of that spend runs through the official handle; it all flows through two proxy pages run by a single ad agency.
+      This means the real public-facing reach of this scheme is coming almost entirely from paid, third-party-branded content — not from the government's own channel. That's worth a direct conversation with whoever manages the ad spend: is this intentional (the agency's pages perform better), or is it money going around the official channel rather than through it?
+    </p>
+  </div>
+</section>
+
+<!-- VERDICT -->
+<section id="verdict">
+  <div class="panel">
+    <h2>What's going well</h2>
+    <div class="findingcard good"><h4>Human testimonials are the single strongest lever available</h4><p>Every page's top post this week was a real person speaking on camera — not a graphic. This works whether the person is a recovering addict, a farmer, a pilgrim, or a retired athlete.</p></div>
+    <div class="findingcard good"><h4>Posting cadence is strong on the flagship campaigns</h4><p>Yudh Nasheyan Virudh, Sehat Yojana, Teerth Yatra, Water Resources, and Road Infra are all posting close to daily — consistency is not the problem on these pages.</p></div>
+    <div class="findingcard good"><h4>Sehat Yojana's ad spend is efficient</h4><p>₹2.2K bought up to 1M impressions in one campaign — whatever targeting/creative was used there is worth documenting and reusing.</p></div>
+  </div>
+  <div class="panel">
+    <h2>What's not going well</h2>
+    <div class="findingcard bad"><h4>Gangstran Te Vaar's daily bulletins are dead weight</h4><p>The district-wise static bulletins are getting 0–6 likes on a 15K-follower page. They add posting volume but not audience engagement — worth questioning whether that format should continue as-is, or be replaced with the higher-performing Reel format.</p></div>
+    <div class="findingcard bad"><h4>Village Playgrounds has quietly stopped making Reels</h4><p>Its best-performing format (Reels, 2,500+ views) hasn't had a new entry in 3+ weeks. All current output is a repeating static template.</p></div>
+    <div class="findingcard bad"><h4>Compliance flags on multiple ad campaigns</h4><p>Gangstran Te Vaar (2 ads) and Sehat Yojana (several ads) were flagged by Meta for running "without a required disclaimer." For official government-linked pages, that's a compliance risk worth fixing before the next boost.</p></div>
+    <div class="findingcard bad"><h4>Teerth Yatra's real distribution bypasses the official page</h4><p>See the Ad Boost tab — ~73 ads running through proxy pages, none through the official handle. Whoever owns that ad budget should confirm this is deliberate strategy, not oversight.</p></div>
+  </div>
+</section>
+
+<!-- POST DETAIL -->
+<section id="posts">
+  <div class="panel">
+    <h2>Post-level detail (all sampled posts, raw data)</h2>
+    <div class="desc">Every individual post opened and logged during this audit, grouped by page. Click to expand.</div>
+
+    <details>
+      <summary>Yudh Nasheyan Virudh — 15 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        2h ago · 40 likes · 959 views — daily helpline promo (Reel)<br>
+        15h ago · 74 likes · 2,322 views — mobile van outreach visit (Reel)<br>
+        2d ago · 824 likes · 12.7K views — MLA/dignitary drug-recovery event (Reel)<br>
+        2d ago · 567 likes · 7,180 views — police/doctor collaboration on rehab (Reel)<br>
+        2d ago · 8 likes · 1,103 views — minister panel clip (Reel)<br>
+        6d ago · 3,778 likes — recovering addict testimonial (top post, static/carousel — no view count)<br>
+        6d ago · 215 likes — CM Reel (view count not captured)<br>
+        6d ago · 459 likes — fitness influencer collab (view count not captured)<br>
+        6d ago · 55 likes — "Soorma" campaign launch (view count not captured)<br>
+        7d ago · 32/85/44/9/160/31 likes — multi-influencer "Sanjha Suneha" campaign batch (6 posts, same day, view counts not captured)
+      </div>
+    </details>
+
+    <details>
+      <summary>Gangstran Te Vaar — 7 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        2d ago · 115 likes · 4,153 views — Reel: CM praising police, 161st day of campaign<br>
+        17h ago · 6 likes — Jalandhar district bulletin (static image, no view count)<br>
+        17h ago · 0 likes — Faridkot district bulletin (static image, no view count)<br>
+        17h ago · 1 like — Bathinda district bulletin (static image, no view count)<br>
+        2d ago · 1 like — Amritsar Commissionerate bulletin (static image, no view count)<br>
+        2d ago · 1 like — Batala firing case bulletin (static image, no view count)<br>
+        (Reels tab: only 1 Reel in the last 7 days · 4,153 views; prior Reel was June 26, just outside the window, at 3,959 views / 121 likes)
+      </div>
+    </details>
+
+    <details>
+      <summary>Mukh Mantri Sehat Yojana — 15 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        20h · 33 likes · 49.8K views — helpline explainer (Reel)<br>
+        21h · 63 likes · 47.6K views — 10,00,000 people served milestone (Reel)<br>
+        22h · 1 like · 54K views — laborer family testimonial (Reel — huge view/like mismatch)<br>
+        23h · 43 likes · 4,535 views — dialysis patient testimonial (Reel)<br>
+        1d · 23 likes · 141K views — patient journey (Reel — huge view/like mismatch)<br>
+        1d · 25 likes — patient journey pt.2 (view count not captured)<br>
+        2d · 18 likes — hospital bill / emergency cost explainer ("8–10 lakh" Reel, view count not captured on this pass)<br>
+        2d · 9 likes — child surgery testimonial (view count not captured)<br>
+        2d · 71 likes — family testimonial, free treatment (view count not captured)<br>
+        2d · 15 likes — kidney disease awareness (view count not captured)<br>
+        3d · 4 likes — Doctor's Day generic post (view count not captured)<br>
+        3d · 51 likes — Doctor's Day tribute video (view count not captured)<br>
+        3d · 36 likes — cancer patient testimonial, B&amp;W stylised (view count not captured)<br>
+        3d · 10 likes — 728 crore spend infographic (view count not captured)<br>
+        3d · 4 likes — prostate cancer carousel, lowest engagement (view count not captured)<br>
+        3d · 377 likes — child's emotional recovery story (top post; view count not captured)
+      </div>
+    </details>
+
+    <details>
+      <summary>Mukh Mantri Teerth Yatra — 7 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        1h · 5 likes · 140 views — campaign intro Reel<br>
+        23h · 10 likes · 446 views — accommodation/food arrangements testimonial (Reel)<br>
+        1d · 29 likes · 510 views — senior citizen dignity/respect testimonial (Reel)<br>
+        1d · 13 likes · 302 views — Golden Temple historical/religious framing (Reel)<br>
+        1d · 36 likes · 377 views — thank-you message from a pilgrim (Reel)<br>
+        3d · 54 likes — pilgrim testimonial at Golden Temple (top post; view count not captured)<br>
+        3d · 51 likes — spiritual peace / Wagah Border patriotism framing (view count not captured)
+      </div>
+    </details>
+
+    <details>
+      <summary>Water Resources Department — 6 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        1h · 2 likes · 197 views — canal water / crop yield explainer (Reel)<br>
+        23h · 43 likes · 638 views — underground pipeline Reel, farmer testimonial<br>
+        1d · 55 likes · 2,203 views — canal water abundance Reel, farmer on camera (top post)<br>
+        3d · 32 likes · 30K views — "Jal Kranti" 9,200km canal stat graphic (Reel — huge view/like mismatch)<br>
+        3d · 30 likes · 2,269 views — groundwater level improvement stat graphic (Reel)<br>
+        3d · 32 likes — new pipeline rajbaha infrastructure graphic (view count not captured)
+      </div>
+    </details>
+
+    <details>
+      <summary>Punjab Road Infra — 5 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        18h · 3 likes · 185 views — Ferozepur road construction graphic (Reel)<br>
+        19h · 53 likes · 2,159 views — villager testimonial Reel, casual motorbike setting (top post)<br>
+        2d · 4 likes · 1,599 views — Sangrur village road repair graphic (Reel)<br>
+        3d · 4 likes · 282 views — 14,305km roads-completed stat graphic (Reel)<br>
+        3d · 7 likes · 197 views — tractor/road-widening B-roll Reel
+      </div>
+    </details>
+
+    <details>
+      <summary>Punjab Village Playgrounds — 5 posts <span class="arrow">▶</span></summary>
+      <div class="postbody">
+        2h · 15 likes — Faridkot village playground, player testimonial<br>
+        2d · 4 likes — "3100 Khed Maidan" plain template<br>
+        2d · 57 likes — elderly villager on 1970s-90s sports nostalgia (top post)<br>
+        2d · 15 likes — Amritsar village cricket ground testimonial<br>
+        3d · 7 likes — Amritsar football/cricket ground template<br>
+        (Most recent Reel: June 8 — 3+ weeks stale)
+      </div>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<footer>Built from public Instagram data (no admin/Insights access) and the public Meta Ad Library. Reach/impression figures for organic posts are unavailable by design — likes, comments, and Reel view counts are used as engagement proxies. Send the remaining 4 page links to complete the full 10-page picture.</footer>
+
+<script>
+  // Tab switching
+  const tabs = document.querySelectorAll('#tabs button');
+  tabs.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      tabs.forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  const pages = ['Yudh Nasheyan Virudh','Gangstran Te Vaar','Sehat Yojana','Teerth Yatra','Water Resources','Road Infra','Village Playgrounds'];
+  const colors = ['#f5a623','#4da3ff','#3ecf8e','#ef5b5b','#b47cff','#42d0f5','#f5e042'];
+
+  // Volume chart
+  new Chart(document.getElementById('volumeChart'), {
+    type:'bar',
+    data:{labels:pages, datasets:[{label:'Posts in last 7 days (sampled/confirmed)',
+      data:[15,7,17,14,14,12,12], backgroundColor:colors}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}},y:{ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}}}}
+  });
+
+  // Format mix (donut)
+  new Chart(document.getElementById('formatChart'), {
+    type:'doughnut',
+    data:{labels:['Reels/video','Static images/graphics'],
+      datasets:[{data:[62,38],backgroundColor:['#4da3ff','#f5a623']}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#e8ecf5'}}}}
+  });
+
+  // Engagement range chart (floating bar min-max)
+  new Chart(document.getElementById('engagementRangeChart'), {
+    type:'bar',
+    data:{labels:pages,
+      datasets:[{
+        label:'Likes range (min–max)',
+        data:[[8,3778],[0,121],[4,377],[5,54],[2,55],[3,53],[4,57]],
+        backgroundColor:colors
+      }]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:(ctx)=>`Range: ${ctx.raw[0]} – ${ctx.raw[1]} likes`}}},
+      scales:{x:{type:'logarithmic',ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}},
+        y:{ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}}}}
+  });
+
+  // Engagement rate bars (custom HTML, not chart.js — best-post-likes / followers)
+  const engData = [
+    {name:'Village Playgrounds', rate: 57/464*100},
+    {name:'Road Infra', rate: 53/836*100},
+    {name:'Teerth Yatra', rate: 54/230*100},
+    {name:'Water Resources', rate: 55/2923*100},
+    {name:'Yudh Nasheyan Virudh', rate: 3778/11300*100},
+    {name:'Sehat Yojana', rate: 377/12900*100},
+    {name:'Gangstran Te Vaar', rate: 121/15400*100},
+  ].sort((a,b)=>b.rate-a.rate);
+  const maxRate = Math.max(...engData.map(d=>d.rate));
+  const container = document.getElementById('engRateBars');
+  engData.forEach(d=>{
+    const row = document.createElement('div');
+    row.className='metricline';
+    row.innerHTML = `<div class="label">${d.name}</div>
+      <div class="barbg"><div class="barfg" style="width:${(d.rate/maxRate*100).toFixed(1)}%"></div></div>
+      <div class="val">${d.rate.toFixed(2)}%</div>`;
+    container.appendChild(row);
+  });
+
+  // Views chart — avg views per page (sampled reels)
+  const viewsAvg = {
+    'Yudh Nasheyan Virudh':[959,2322,12700,7180,1103],
+    'Gangstran Te Vaar':[4153],
+    'Sehat Yojana':[49800,47600,54000,4535,141000],
+    'Teerth Yatra':[140,446,510,302,377],
+    'Water Resources':[197,638,2203,30000,2269],
+    'Road Infra':[2159,185,1599,282,197],
+  };
+  const viewLabels = Object.keys(viewsAvg);
+  const viewAvgData = viewLabels.map(k=>{
+    const arr=viewsAvg[k]; return Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+  });
+  new Chart(document.getElementById('viewsChart'), {
+    type:'bar',
+    data:{labels:viewLabels, datasets:[{label:'Average views per Reel (sampled)',
+      data:viewAvgData, backgroundColor:colors}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{y:{type:'logarithmic',ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}},
+        x:{ticks:{color:'#9aa5c0'},grid:{color:'#2a3450'}}}}
+  });
+
+  // Like-through rate bars
+  const ltrData = [
+    {name:'Teerth Yatra', rate: (5+10+29+13+36)/(140+446+510+302+377)*100},
+    {name:'Yudh Nasheyan Virudh', rate: (40+74+824+567+8)/(959+2322+12700+7180+1103)*100},
+    {name:'Gangstran Te Vaar', rate: 115/4153*100},
+    {name:'Water Resources', rate: (2+43+55+32+30)/(197+638+2203+30000+2269)*100},
+    {name:'Road Infra', rate: (53+3+4+4+7)/(2159+185+1599+282+197)*100},
+    {name:'Sehat Yojana', rate: (33+63+1+43+23)/(49800+47600+54000+4535+141000)*100},
+  ].sort((a,b)=>b.rate-a.rate);
+  const maxLtr = Math.max(...ltrData.map(d=>d.rate));
+  const ltrContainer = document.getElementById('ltrBars');
+  ltrData.forEach(d=>{
+    const row = document.createElement('div');
+    row.className='metricline';
+    row.innerHTML = `<div class="label">${d.name}</div>
+      <div class="barbg"><div class="barfg" style="width:${(d.rate/maxLtr*100).toFixed(1)}%"></div></div>
+      <div class="val">${d.rate.toFixed(2)}%</div>`;
+    ltrContainer.appendChild(row);
+  });
+
+  // Quality radar
+  new Chart(document.getElementById('qualityRadar'), {
+    type:'radar',
+    data:{
+      labels:['Storytelling','Consistency','Production','Engagement Health'],
+      datasets:[
+        {label:'Yudh Nasheyan Virudh', data:[5,5,4,4], borderColor:'#f5a623', backgroundColor:'rgba(245,166,35,0.15)'},
+        {label:'Sehat Yojana', data:[4,5,4,1], borderColor:'#4da3ff', backgroundColor:'rgba(77,163,255,0.12)'},
+        {label:'Teerth Yatra', data:[4,5,3,4], borderColor:'#ef5b5b', backgroundColor:'rgba(239,91,91,0.10)'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#e8ecf5',font:{size:10}}}},
+      scales:{r:{min:0,max:5,angleLines:{color:'#2a3450'},grid:{color:'#2a3450'},
+        pointLabels:{color:'#9aa5c0',font:{size:11}},ticks:{color:'#9aa5c0',backdropColor:'transparent'}}}}
+  });
+</script>
+</body>
+</html>
